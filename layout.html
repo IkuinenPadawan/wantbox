@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{.PageTitle}}</title>
+</head>
+<body>
+    <h1>{{.PageTitle}}</h1>
+    <ul>
+    {{range .WishlistItems}}
+        <li>
+            <strong>{{.ItemName}}</strong> - ${{.Price}}
+            <br><a href="{{.Url}}">{{.Url}}</a>
+        </li>
+    {{end}}
+    </ul>
+</body>
+</html>

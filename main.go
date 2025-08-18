@@ -5,26 +5,35 @@ import (
 	"net/http"
 )
 
-type wishlisting struct {
-	ID    string  `json:"id"`
-	Item  string  `json:"item"`
-	Url   string  `json:"url"`
-	Price float64 `json:"price"`
+type WishListItem struct {
+	ID       string  `json:"id"`
+	ItemName string  `json:"item"`
+	Url      string  `json:"url"`
+	Price    float64 `json:"price"`
 }
 
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, wishlist)
+type WishListPageData struct {
+	PageTitle     string
+	WishlistItems []WishListItem
 }
 
-var wishlist = []wishlisting{
-	{ID: "1", Item: "Rudder Pedals", Url: "www.google.com", Price: 350.00},
-	{ID: "2", Item: "Synth", Url: "www.google.com", Price: 500.00},
-	{ID: "3", Item: "Saucony shoes", Url: "www.google.com", Price: 99.00},
+var wishlist = []WishListItem{
+	{ID: "1", ItemName: "Rudder Pedals", Url: "www.google.com", Price: 350.00},
+	{ID: "2", ItemName: "Synth", Url: "www.google.com", Price: 500.00},
+	{ID: "3", ItemName: "Saucony shoes", Url: "www.google.com", Price: 99.00},
 }
 
 func main() {
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
+	router.LoadHTMLFiles("layout.html")
 
-	router.Run("localhost:8080")
+	router.GET("/", func(c *gin.Context) {
+		data := WishListPageData{
+			PageTitle:     "Wantbox",
+			WishlistItems: wishlist,
+		}
+		c.HTML(http.StatusOK, "layout.html", data)
+	})
+
+	router.Run(":8080")
 }
