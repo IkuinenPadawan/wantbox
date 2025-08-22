@@ -39,15 +39,7 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 	}
 
 	insertWishlistItem(db, itemname, price, url, user)
-	responseData := gin.H{
-		"itemname": itemname,
-		"price":    price,
-		"url":      url,
-		"user":     user,
-		"status":   "Form received",
-	}
-	c.JSON(http.StatusOK, responseData)
-
+	c.Redirect(http.StatusFound, "/")
 }
 
 func insertWishlistItem(db *sql.DB, username string, price float64, url string, user int) {
@@ -121,16 +113,15 @@ func main() {
 	}
 	log.Println("Database connected successfully")
 
-	wishlist, err := findAll(db)
-	if err != nil {
-		log.Fatal("Error finding all items:", err)
-	}
-
 	// Router
 	router := gin.Default()
 	router.LoadHTMLFiles("layout.html")
 
 	router.GET("/", func(c *gin.Context) {
+		wishlist, err := findAll(db)
+		if err != nil {
+			log.Fatal("Error finding all items:", err)
+		}
 		data := WishListPageData{
 			PageTitle:     "Wantbox",
 			WishlistItems: wishlist,
