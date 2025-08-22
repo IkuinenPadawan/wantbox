@@ -4,6 +4,19 @@
     <title>{{.PageTitle}}</title>
 </head>
 <body>
+        <div>
+            <form method="POST" action="/wishlist">
+                <label for="itemname">Item Name:</label>
+                <input type="text" id="itemname" name="itemname">
+                <label for="price">Price:</label>
+                <input type="text" id="price" name="price">
+                <label for="url">Link:</label>
+                <input type="text" id="url" name="url">
+                <label for="user">User:</label>
+                <input type="text" id="user" name="user">
+                <input type="submit" value="Submit">
+            </form>
+        </div>
     <h1>{{.PageTitle}}</h1>
     <ul>
     {{range .WishlistItems}}

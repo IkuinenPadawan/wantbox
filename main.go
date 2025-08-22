@@ -6,6 +6,7 @@ import (
 	"log"
 	_ "modernc.org/sqlite"
 	"net/http"
+	"strconv"
 )
 
 type WishListItem struct {
@@ -19,6 +20,46 @@ type WishListItem struct {
 type WishListPageData struct {
 	PageTitle     string
 	WishlistItems []WishListItem
+}
+
+func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
+	itemname := c.PostForm("itemname")
+	priceStr := c.PostForm("price")
+	url := c.PostForm("url")
+	userStr := c.PostForm("user")
+
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		log.Print(err)
+	}
+
+	user, err := strconv.Atoi(userStr)
+	if err != nil {
+		log.Print(err)
+	}
+
+	insertWishlistItem(db, itemname, price, url, user)
+	responseData := gin.H{
+		"itemname": itemname,
+		"price":    price,
+		"url":      url,
+		"user":     user,
+		"status":   "Form received",
+	}
+	c.JSON(http.StatusOK, responseData)
+
+}
+
+func insertWishlistItem(db *sql.DB, username string, price float64, url string, user int) {
+	insertWishlistItemSQL := `INSERT INTO wishlist (itemname, price, url, user_id) VALUES (?, ?, ?, ?)`
+	statement, err := db.Prepare(insertWishlistItemSQL)
+	if err != nil {
+		log.Print(err)
+	}
+	_, err = statement.Exec(username, price, url, user)
+	if err != nil {
+		log.Print(err)
+	}
 }
 
 func findAll(db *sql.DB) ([]WishListItem, error) {
@@ -95,6 +136,10 @@ func main() {
 			WishlistItems: wishlist,
 		}
 		c.HTML(http.StatusOK, "layout.html", data)
+	})
+
+	router.POST("/wishlist", func(c *gin.Context) {
+		handleWishlistItemForm(db, c)
 	})
 
 	router.Run(":8080")
