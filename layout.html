@@ -23,6 +23,10 @@
         <li>
             <strong>{{.ItemName}}</strong> - ${{.Price}}
             <br><a href="{{.Url}}">{{.Url}}</a>
+                <form method="POST" action="/wishlist/{{.ID}}/delete">
+                    <input type="hidden" name="id" value="{{.ID}}">
+                    <button type="submit">DELETE</button>
+                </form>
         </li>
     {{end}}
     </ul>

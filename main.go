@@ -54,8 +54,31 @@ func insertWishlistItem(db *sql.DB, username string, price float64, url string, 
 	}
 }
 
+func deleteWishlistItemHandler(db *sql.DB, c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Print(err)
+	}
+	deleteWishlistItem(db, id)
+
+	c.Redirect(http.StatusFound, "/")
+}
+
+func deleteWishlistItem(db *sql.DB, itemId int) {
+	deleteOneSQL := `DELETE FROM wishlist WHERE ID = (?)`
+	statement, err := db.Prepare(deleteOneSQL)
+	if err != nil {
+		log.Print(err)
+	}
+	_, err = statement.Exec(itemId)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
 func findAll(db *sql.DB) ([]WishListItem, error) {
-	selectAll := `SELECT itemname, price, url FROM wishlist;`
+	selectAll := `SELECT id, itemname, price, url FROM wishlist;`
 	rows, err := db.Query(selectAll)
 	if err != nil {
 		return nil, err
@@ -65,7 +88,7 @@ func findAll(db *sql.DB) ([]WishListItem, error) {
 	var wishlistItems []WishListItem
 	for rows.Next() {
 		w := &WishListItem{}
-		err := rows.Scan(&w.ItemName, &w.Price, &w.Url)
+		err := rows.Scan(&w.ID, &w.ItemName, &w.Price, &w.Url)
 		if err != nil {
 			return nil, err
 		}
@@ -131,6 +154,10 @@ func main() {
 
 	router.POST("/wishlist", func(c *gin.Context) {
 		handleWishlistItemForm(db, c)
+	})
+
+	router.POST("/wishlist/:id/delete", func(c *gin.Context) {
+		deleteWishlistItemHandler(db, c)
 	})
 
 	router.Run(":8080")
