@@ -22,6 +22,11 @@ type WishListPageData struct {
 	WishlistItems []WishListItem
 }
 
+type WishlistItemEditPageData struct {
+	PageTitle    string
+	WishlistItem WishListItem
+}
+
 func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 	itemname := c.PostForm("itemname")
 	priceStr := c.PostForm("price")
@@ -77,6 +82,44 @@ func deleteWishlistItem(db *sql.DB, itemId int) {
 	}
 }
 
+func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Print(err)
+	}
+	itemname := c.PostForm("itemname")
+	priceStr := c.PostForm("price")
+	url := c.PostForm("url")
+	userStr := c.PostForm("user")
+
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		log.Print(err)
+	}
+
+	user, err := strconv.Atoi(userStr)
+	if err != nil {
+		log.Print(err)
+	}
+
+	updateWishlistItem(db, itemname, price, url, user, id)
+	c.Redirect(http.StatusFound, "/")
+}
+
+func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, id int) {
+	updateSQL := `UPDATE wishlist SET itemname = (?), price = (?), url = (?), user_id = (?) WHERE ID = (?)`
+	statement, err := db.Prepare(updateSQL)
+
+	if err != nil {
+		log.Print(err)
+	}
+	_, err = statement.Exec(itemname, price, url, user, id)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
 func findAll(db *sql.DB) ([]WishListItem, error) {
 	selectAll := `SELECT id, itemname, price, url FROM wishlist;`
 	rows, err := db.Query(selectAll)
@@ -95,6 +138,25 @@ func findAll(db *sql.DB) ([]WishListItem, error) {
 		wishlistItems = append(wishlistItems, *w)
 	}
 	return wishlistItems, nil
+}
+
+func findOne(db *sql.DB, id int) (WishListItem, error) {
+	selectOne := `SELECT id, itemname, price, url, user_id FROM wishlist WHERE ID = ?`
+	statement, err := db.Prepare(selectOne)
+	if err != nil {
+		log.Print(err)
+	}
+	defer statement.Close()
+
+	var wishlistItem WishListItem
+	w := &WishListItem{}
+	err = statement.QueryRow(id).Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.UserId)
+	if err != nil {
+		log.Print(err)
+	}
+	wishlistItem = *w
+	return wishlistItem, nil
+
 }
 
 func main() {
@@ -138,7 +200,7 @@ func main() {
 
 	// Router
 	router := gin.Default()
-	router.LoadHTMLFiles("layout.html")
+	router.LoadHTMLGlob("templates/*")
 
 	router.GET("/", func(c *gin.Context) {
 		wishlist, err := findAll(db)
@@ -149,7 +211,7 @@ func main() {
 			PageTitle:     "Wantbox",
 			WishlistItems: wishlist,
 		}
-		c.HTML(http.StatusOK, "layout.html", data)
+		c.HTML(http.StatusOK, "layout.tmpl", data)
 	})
 
 	router.POST("/wishlist", func(c *gin.Context) {
@@ -158,6 +220,24 @@ func main() {
 
 	router.POST("/wishlist/:id/delete", func(c *gin.Context) {
 		deleteWishlistItemHandler(db, c)
+	})
+
+	router.GET("/wishlist/:id/edit", func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		wishlistItem, err := findOne(db, id)
+		if err != nil {
+			log.Print(err)
+		}
+		data := WishlistItemEditPageData{
+			PageTitle:    "Edit",
+			WishlistItem: wishlistItem,
+		}
+		c.HTML(http.StatusOK, "edititem.tmpl", data)
+	})
+
+	router.POST("/wishlist/:id/edit", func(c *gin.Context) {
+		updateWishlistItemHandler(db, c)
 	})
 
 	router.Run(":8080")
