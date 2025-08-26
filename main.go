@@ -35,7 +35,8 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		log.Print(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid price format"})
+		return
 	}
 
 	user, err := strconv.Atoi(userStr)
@@ -43,50 +44,57 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 		log.Print(err)
 	}
 
-	insertWishlistItem(db, itemname, price, url, user)
-	c.Redirect(http.StatusFound, "/")
+	err = insertWishlistItem(db, itemname, price, url, user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save item"})
+		return
+	}
+	c.Redirect(http.StatusCreated, "/")
 }
 
-func insertWishlistItem(db *sql.DB, username string, price float64, url string, user int) {
+func insertWishlistItem(db *sql.DB, username string, price float64, url string, user int) error {
 	insertWishlistItemSQL := `INSERT INTO wishlist (itemname, price, url, user_id) VALUES (?, ?, ?, ?)`
 	statement, err := db.Prepare(insertWishlistItemSQL)
 	if err != nil {
-		log.Print(err)
+		return err
 	}
 	_, err = statement.Exec(username, price, url, user)
-	if err != nil {
-		log.Print(err)
-	}
+
+	return err
 }
 
 func deleteWishlistItemHandler(db *sql.DB, c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		log.Print(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id format"})
+		return
 	}
-	deleteWishlistItem(db, id)
+	err = deleteWishlistItem(db, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete item"})
+		return
+	}
 
-	c.Redirect(http.StatusFound, "/")
+	c.Redirect(http.StatusNoContent, "/")
 }
 
-func deleteWishlistItem(db *sql.DB, itemId int) {
+func deleteWishlistItem(db *sql.DB, itemId int) error {
 	deleteOneSQL := `DELETE FROM wishlist WHERE ID = (?)`
 	statement, err := db.Prepare(deleteOneSQL)
 	if err != nil {
-		log.Print(err)
+		return err
 	}
 	_, err = statement.Exec(itemId)
-	if err != nil {
-		log.Print(err)
-	}
+	return err
 }
 
 func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		log.Print(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id format"})
+		return
 	}
 	itemname := c.PostForm("itemname")
 	priceStr := c.PostForm("price")
@@ -95,7 +103,8 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
-		log.Print(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid price format"})
+		return
 	}
 
 	user, err := strconv.Atoi(userStr)
@@ -104,20 +113,22 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 	}
 
 	updateWishlistItem(db, itemname, price, url, user, id)
-	c.Redirect(http.StatusFound, "/")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item"})
+		return
+	}
+	c.Redirect(http.StatusNoContent, "/")
 }
 
-func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, id int) {
+func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, id int) error {
 	updateSQL := `UPDATE wishlist SET itemname = (?), price = (?), url = (?), user_id = (?) WHERE ID = (?)`
 	statement, err := db.Prepare(updateSQL)
-
 	if err != nil {
-		log.Print(err)
+		return err
 	}
 	_, err = statement.Exec(itemname, price, url, user, id)
-	if err != nil {
-		log.Print(err)
-	}
+
+	return err
 }
 
 func findAll(db *sql.DB) ([]WishListItem, error) {
@@ -151,12 +162,8 @@ func findOne(db *sql.DB, id int) (WishListItem, error) {
 	var wishlistItem WishListItem
 	w := &WishListItem{}
 	err = statement.QueryRow(id).Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.UserId)
-	if err != nil {
-		log.Print(err)
-	}
 	wishlistItem = *w
-	return wishlistItem, nil
-
+	return wishlistItem, err
 }
 
 func main() {
@@ -205,8 +212,10 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		wishlist, err := findAll(db)
 		if err != nil {
-			log.Fatal("Error finding all items:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve items"})
+			return
 		}
+
 		data := WishListPageData{
 			PageTitle:     "Wantbox",
 			WishlistItems: wishlist,
@@ -225,9 +234,18 @@ func main() {
 	router.GET("/wishlist/:id/edit", func(c *gin.Context) {
 		idStr := c.Param("id")
 		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+			return
+		}
 		wishlistItem, err := findOne(db, id)
 		if err != nil {
-			log.Print(err)
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Item not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to retrieve item"})
+			}
+			return
 		}
 		data := WishlistItemEditPageData{
 			PageTitle:    "Edit",
