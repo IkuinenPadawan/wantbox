@@ -112,7 +112,7 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 		log.Print(err)
 	}
 
-	updateWishlistItem(db, itemname, price, url, user, id)
+	err = updateWishlistItem(db, itemname, price, url, user, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item"})
 		return
