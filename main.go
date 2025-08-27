@@ -49,7 +49,7 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save item"})
 		return
 	}
-	c.Redirect(http.StatusCreated, "/")
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 func insertWishlistItem(db *sql.DB, username string, price float64, url string, user int) error {
@@ -76,7 +76,7 @@ func deleteWishlistItemHandler(db *sql.DB, c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusNoContent, "/")
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 func deleteWishlistItem(db *sql.DB, itemId int) error {
@@ -117,7 +117,7 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item"})
 		return
 	}
-	c.Redirect(http.StatusNoContent, "/")
+	c.Redirect(http.StatusSeeOther, "/")
 }
 
 func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, id int) error {
