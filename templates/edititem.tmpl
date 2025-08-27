@@ -7,11 +7,11 @@
         <div>
             <form method="POST" action="/wishlist/{{.WishlistItem.ID}}/edit">
                 <label for="itemname">Item Name:</label>
-                <input type="text" id="itemname" name="itemname" value={{.WishlistItem.ItemName}}>
+                <input type="text" id="itemname" name="itemname" value={{.WishlistItem.ItemName}} required minlength="1" maxlength="100">
                 <label for="price">Price:</label>
-                <input type="text" id="price" name="price" value={{.WishlistItem.Price}}>
+                <input type="number" id="price" name="price" value={{.WishlistItem.Price}} min="0" max="10000000" step="0.01">
                 <label for="url">Link:</label>
-                <input type="text" id="url" name="url" value={{.WishlistItem.Url}}>
+                <input type="url" id="url" name="url" value={{.WishlistItem.Url}}>
                 <label for="user">User:</label>
                 <input type="text" id="user" name="user" value={{.WishlistItem.UserId}}>
                 <input type="submit" value="Submit">

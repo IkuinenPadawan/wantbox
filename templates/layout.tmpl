@@ -7,11 +7,11 @@
         <div>
             <form method="POST" action="/wishlist">
                 <label for="itemname">Item Name:</label>
-                <input type="text" id="itemname" name="itemname">
+                <input type="text" id="itemname" name="itemname" required minlength="1" maxlength="100">
                 <label for="price">Price:</label>
-                <input type="text" id="price" name="price">
+                <input type="number" id="price" name="price" value="0.00" min="0" max="10000000" step="0.01">
                 <label for="url">Link:</label>
-                <input type="text" id="url" name="url">
+                <input type="url" id="url" name="url" placeholder="https://example.com">
                 <label for="user">User:</label>
                 <input type="text" id="user" name="user">
                 <input type="submit" value="Submit">
@@ -22,7 +22,7 @@
     {{range .WishlistItems}}
         <li>
             <strong>{{.ItemName}}</strong> - ${{.Price}}
-            <br><a href="{{.Url}}">{{.Url}}</a>
+            <br><a href="{{.Url}}" target="_blank" rel="noopener noreferrer">{{.Url}}</a>
                 <form method="POST" action="/wishlist/{{.ID}}/delete">
                     <input type="hidden" name="id" value="{{.ID}}">
                     <button type="submit">DELETE</button>
