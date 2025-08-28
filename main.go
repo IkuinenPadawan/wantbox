@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	_ "modernc.org/sqlite"
@@ -27,24 +28,53 @@ type WishlistItemEditPageData struct {
 	WishlistItem WishListItem
 }
 
+type ValidatedWishListItem struct {
+	ItemName string
+	Price    float64
+	Url      string
+	UserID   int
+}
+
+func validateAndParseWishlistitem(itemname string, priceStr string, url string, userStr string) (ValidatedWishListItem, error) {
+	var item ValidatedWishListItem
+	if itemname == "" || len(itemname) > 100 {
+		return item, fmt.Errorf("item name needs to be between 1-100 characters")
+	}
+	item.ItemName = itemname
+
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		return item, fmt.Errorf("invalid price")
+	}
+	item.Price = price
+
+	if len(url) > 500 {
+		return item, fmt.Errorf("url needs to be under 500 characters")
+	}
+	item.Url = url
+
+	userId, err := strconv.Atoi(userStr)
+	if err != nil {
+		return item, fmt.Errorf("invalid user id")
+	}
+	item.UserID = userId
+
+	return item, nil
+}
+
 func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 	itemname := c.PostForm("itemname")
 	priceStr := c.PostForm("price")
 	url := c.PostForm("url")
 	userStr := c.PostForm("user")
 
-	price, err := strconv.ParseFloat(priceStr, 64)
+	validatedItem, err := validateAndParseWishlistitem(itemname, priceStr, url, userStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid price format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user, err := strconv.Atoi(userStr)
-	if err != nil {
-		log.Print(err)
-	}
-
-	err = insertWishlistItem(db, itemname, price, url, user)
+	err = insertWishlistItem(db, validatedItem.ItemName, validatedItem.Price, validatedItem.Url, validatedItem.UserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save item"})
 		return
@@ -101,18 +131,13 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 	url := c.PostForm("url")
 	userStr := c.PostForm("user")
 
-	price, err := strconv.ParseFloat(priceStr, 64)
+	validatedItem, err := validateAndParseWishlistitem(itemname, priceStr, url, userStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid price format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user, err := strconv.Atoi(userStr)
-	if err != nil {
-		log.Print(err)
-	}
-
-	err = updateWishlistItem(db, itemname, price, url, user, id)
+	err = updateWishlistItem(db, validatedItem.ItemName, validatedItem.Price, validatedItem.Url, validatedItem.UserID, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item"})
 		return
