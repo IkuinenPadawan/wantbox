@@ -82,13 +82,13 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
-func insertWishlistItem(db *sql.DB, username string, price float64, url string, user int) error {
+func insertWishlistItem(db *sql.DB, itemname string, price float64, url string, user int) error {
 	insertWishlistItemSQL := `INSERT INTO wishlist (itemname, price, url, user_id) VALUES (?, ?, ?, ?)`
 	statement, err := db.Prepare(insertWishlistItemSQL)
 	if err != nil {
 		return err
 	}
-	_, err = statement.Exec(username, price, url, user)
+	_, err = statement.Exec(itemname, price, url, user)
 
 	return err
 }
