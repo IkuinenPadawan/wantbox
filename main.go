@@ -16,16 +16,19 @@ type WishListItem struct {
 	Url      string  `json:"url"`
 	Price    float64 `json:"price"`
 	UserId   int     `json:"user_id"`
+	UserName string  `json:"username"`
 }
 
 type WishListPageData struct {
 	PageTitle     string
 	WishlistItems []WishListItem
+	Users         []User
 }
 
 type WishlistItemEditPageData struct {
 	PageTitle    string
 	WishlistItem WishListItem
+	Users        []User
 }
 
 type ValidatedWishListItem struct {
@@ -33,6 +36,11 @@ type ValidatedWishListItem struct {
 	Price    float64
 	Url      string
 	UserID   int
+}
+
+type User struct {
+	ID   int
+	Name string
 }
 
 func validateAndParseWishlistitem(itemname string, priceStr string, url string, userStr string) (ValidatedWishListItem, error) {
@@ -156,10 +164,35 @@ func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, 
 	return err
 }
 
-func findAll(db *sql.DB) ([]WishListItem, error) {
-	selectAll := `SELECT id, itemname, price, url FROM wishlist;`
+func findAllUsers(db *sql.DB) ([]User, error) {
+	selectAll := `SELECT id, name FROM users;`
 	rows, err := db.Query(selectAll)
 	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		u := &User{}
+		err := rows.Scan(&u.ID, &u.Name)
+		if err != nil {
+			log.Print(err)
+			return nil, err
+		}
+		users = append(users, *u)
+	}
+
+	return users, nil
+}
+
+func findAll(db *sql.DB) ([]WishListItem, error) {
+	selectAll := `SELECT wishlist.id, itemname, price, url, users.name FROM wishlist INNER JOIN users ON users.id = wishlist.user_id;`
+	rows, err := db.Query(selectAll)
+	if err != nil {
+		log.Print(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -167,8 +200,9 @@ func findAll(db *sql.DB) ([]WishListItem, error) {
 	var wishlistItems []WishListItem
 	for rows.Next() {
 		w := &WishListItem{}
-		err := rows.Scan(&w.ID, &w.ItemName, &w.Price, &w.Url)
+		err := rows.Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.UserName)
 		if err != nil {
+			log.Print(err)
 			return nil, err
 		}
 		wishlistItems = append(wishlistItems, *w)
@@ -199,18 +233,39 @@ func main() {
 	}
 	defer db.Close()
 
+	dropWishlist := `DROP TABLE wishlist;`
+	dropUsers := `DROP TABLE users;`
+	_, err = db.Exec(dropWishlist)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(dropUsers)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	createWishlistTableSql := `CREATE TABLE IF NOT EXISTS wishlist (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		itemname TEXT NOT NULL,
 		price REAL NOT NULL,
 		url TEXT NOT NULL,
 		user_id INTEGER NOT NULL,
-		timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+		timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+	    FOREIGN KEY (user_id)
+	      REFERENCES users (id)
 		);`
 
 	insertMockData := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Rudder Pedals", 350.00, "www.google.com", 1);`
 	insertMockData2 := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Synth", 500.00, "www.google.com", 1);`
-	insertMockData3 := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Saucony shoes", 99.00, "www.google.com", 1);`
+	insertMockData3 := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Saucony shoes", 99.00, "www.google.com", 2);`
+
+	createUserTableSql := `CREATE TABLE IF NOT EXISTS users (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL);`
+
+	insertMockUserData := `INSERT INTO users(name) VALUES ("Augustus");`
+	insertMockUserData2 := `INSERT INTO users(name) VALUES ("Magalhaes");`
 
 	_, err = db.Exec(createWishlistTableSql)
 	if err != nil {
@@ -220,6 +275,21 @@ func main() {
 	_, err = db.Exec(insertMockData)
 	_, err = db.Exec(insertMockData2)
 	_, err = db.Exec(insertMockData3)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(createUserTableSql)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(insertMockUserData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(insertMockUserData2)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -241,9 +311,16 @@ func main() {
 			return
 		}
 
+		users, err := findAllUsers(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+			return
+		}
+
 		data := WishListPageData{
 			PageTitle:     "Wantbox",
 			WishlistItems: wishlist,
+			Users:         users,
 		}
 		c.HTML(http.StatusOK, "layout.tmpl", data)
 	})
@@ -272,9 +349,17 @@ func main() {
 			}
 			return
 		}
+
+		users, err := findAllUsers(db)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+			return
+		}
+
 		data := WishlistItemEditPageData{
 			PageTitle:    "Edit",
 			WishlistItem: wishlistItem,
+			Users:        users,
 		}
 		c.HTML(http.StatusOK, "edititem.tmpl", data)
 	})
