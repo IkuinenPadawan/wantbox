@@ -357,7 +357,7 @@ func main() {
 		}
 
 		data := WishlistItemEditPageData{
-			PageTitle:    "Edit",
+			PageTitle:    "Wantbox",
 			WishlistItem: wishlistItem,
 			Users:        users,
 		}
