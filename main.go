@@ -31,11 +31,19 @@ type WishlistItemEditPageData struct {
 	Users        []User
 }
 
+type AddUserPageData struct {
+	PageTitle string
+}
+
 type ValidatedWishListItem struct {
 	ItemName string
 	Price    float64
 	Url      string
 	UserID   int
+}
+
+type ValidatedUserName struct {
+	UserName string
 }
 
 type User struct {
@@ -68,6 +76,15 @@ func validateAndParseWishlistitem(itemname string, priceStr string, url string, 
 	item.UserID = userId
 
 	return item, nil
+}
+
+func validateUserForm(username string) (ValidatedUserName, error) {
+	var validatedUsername ValidatedUserName
+	if username == "" || len(username) > 40 {
+		return validatedUsername, fmt.Errorf("username needs to be between 1-40 charactes")
+	}
+	validatedUsername.UserName = username
+	return validatedUsername, nil
 }
 
 func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
@@ -160,6 +177,33 @@ func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, 
 		return err
 	}
 	_, err = statement.Exec(itemname, price, url, user, id)
+
+	return err
+}
+
+func handleUserForm(db *sql.DB, c *gin.Context) {
+	username := c.PostForm("username")
+	validatedUserName, err := validateUserForm(username)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	err = addUser(db, validatedUserName.UserName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add user"})
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/")
+}
+
+func addUser(db *sql.DB, username string) error {
+	addUserSQL := `INSERT INTO users(name) VALUES (?);`
+	statement, err := db.Prepare(addUserSQL)
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(username)
 
 	return err
 }
@@ -366,6 +410,17 @@ func main() {
 
 	router.POST("/wishlist/:id/edit", func(c *gin.Context) {
 		updateWishlistItemHandler(db, c)
+	})
+
+	router.GET("/user", func(c *gin.Context) {
+		data := AddUserPageData{
+			PageTitle: "Wantbox",
+		}
+		c.HTML(http.StatusOK, "adduser.tmpl", data)
+	})
+
+	router.POST("/user", func(c *gin.Context) {
+		handleUserForm(db, c)
 	})
 
 	router.Run(":8080")
