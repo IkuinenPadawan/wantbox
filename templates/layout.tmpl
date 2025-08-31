@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><a href="/">{{.PageTitle}}</a></title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<header> 
+<div class="navbar bg-base-100 shadow-sm mb-4">
+  <div class="flex-1">
+    <a href="/" class="btn btn-ghost text-xl">{{.PageTitle}}</a>
+  </div>
+  <a href="/user">Add user</a>
+</div>
+</header>
+<body>
+  <div class="flex flex-col m-4">
+    <form method="POST" action="/wishlist">
+      <label for="itemname">Item Name:</label>
+      <input type="text" id="itemname" name="itemname" class="input w-52" required minlength="1" maxlength="100">
+      <label for="price">Price:</label>
+      <input type="number" id="price" name="price" class="input w-20" value="0.00" min="0" max="10000000" step="0.01">
+      <label for="url">Link:</label>
+      <input type="url" id="url" name="url" class="input" placeholder="https://example.com">
+      <label for="user">User:</label>
+      <select name="user" id="users" class="select w-36">
+      {{range .Users}}
+        <option value="{{.ID}}">{{.Name}}</option>
+      {{end}}
+      </select>
+      <input class="btn btn-neutral"type="submit" value="Submit">
+    </form>
+  </div>
+  <ul class="grid grid-cols-1 md:grid-cols-4 gap-1 m-4">
+  {{range .WishlistItems}}
+    <li>
+    <div class="card bg-base-100 w-96 shadow-sm mb-4">
+      <figure>
+        <img
+          src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
+          alt="Shoes" />
+      </figure>
+    <div class="card-body">
+      <h2 class="card-title">{{.ItemName}}
+      -
+        <strong class="text-lg">{{.Price}}€</strong>
+      <div class="avatar avatar-placeholder">
+        <div class="bg-neutral text-neutral-content w-8 rounded-full">
+          <span class="text-xs">{{slice .UserName 0 1}}</span>
+        </div>
+      </h2>
+      <div class="card-actions justify-center">
+        <a href="{{.Url}}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Buy now</a>
+        <a href="/wishlist/{{.ID}}/edit" class="btn btn-primary">Edit</a>
+        <form method="POST" action="/wishlist/{{.ID}}/delete">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button type="submit" class="btn btn-soft btn-secondary">DELETE</button>
+        </form>
+      </div>
+      </div>
+    </div>
+    </div>
+    </li>
+  {{end}}
+  </ul>
+</body>
+</html>
