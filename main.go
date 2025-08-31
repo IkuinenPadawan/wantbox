@@ -277,18 +277,6 @@ func main() {
 	}
 	defer db.Close()
 
-	dropWishlist := `DROP TABLE wishlist;`
-	dropUsers := `DROP TABLE users;`
-	_, err = db.Exec(dropWishlist)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(dropUsers)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	createWishlistTableSql := `CREATE TABLE IF NOT EXISTS wishlist (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		itemname TEXT NOT NULL,
@@ -300,40 +288,16 @@ func main() {
 	      REFERENCES users (id)
 		);`
 
-	insertMockData := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Rudder Pedals", 350.00, "www.google.com", 1);`
-	insertMockData2 := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Synth", 500.00, "www.google.com", 1);`
-	insertMockData3 := `INSERT INTO wishlist(itemname, price, url, user_id) VALUES("Saucony shoes", 99.00, "www.google.com", 2);`
-
 	createUserTableSql := `CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL);`
-
-	insertMockUserData := `INSERT INTO users(name) VALUES ("Augustus");`
-	insertMockUserData2 := `INSERT INTO users(name) VALUES ("Magalhaes");`
 
 	_, err = db.Exec(createWishlistTableSql)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = db.Exec(insertMockData)
-	_, err = db.Exec(insertMockData2)
-	_, err = db.Exec(insertMockData3)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	_, err = db.Exec(createUserTableSql)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(insertMockUserData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(insertMockUserData2)
 	if err != nil {
 		log.Fatal(err)
 	}
