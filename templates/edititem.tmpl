@@ -23,6 +23,14 @@
       <input type="note" id="note" name="note"  value={{.WishlistItem.Note}} class="input" placeholder="Leave a note...">
       <label for="url">Link:</label>
       <input type="text" id="url" name="url" value={{.WishlistItem.Url}} class="input" placeholder="https://example.com">
+      <label for="priority">Priority</label>
+      <select name="priority" id="priority" class="select w-18">
+        <option value="1" {{if eq .WishlistItem.Priority 1}}selected{{end}}>1</option>
+        <option value="2" {{if eq .WishlistItem.Priority 2}}selected{{end}}>2</option>
+        <option value="3" {{if eq .WishlistItem.Priority 3}}selected{{end}}>3</option>
+        <option value="4" {{if eq .WishlistItem.Priority 4}}selected{{end}}>4</option>
+        <option value="5" {{if eq .WishlistItem.Priority 5}}selected{{end}}>5</option>
+      </select>
       <label for="user">User:</label>
       <select name="user" id="user" class="select w-36">
         {{range .Users}}
