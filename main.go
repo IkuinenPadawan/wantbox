@@ -191,7 +191,7 @@ func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, 
 	if err != nil {
 		return err
 	}
-	_, err = statement.Exec(itemname, price, url, note, user, priority, id)
+	_, err = statement.Exec(itemname, price, url, note, priority, user, id)
 
 	return err
 }
