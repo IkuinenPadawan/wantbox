@@ -286,7 +286,7 @@ func findOne(db *sql.DB, id int) (WishListItem, error) {
 
 func main() {
 	// DB
-	db, err := sql.Open("sqlite", "wantbox.db")
+	db, err := sql.Open("sqlite", "./data/wantbox.db")
 	if err != nil {
 		log.Fatal(err)
 	}
