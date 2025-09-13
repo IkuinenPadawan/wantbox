@@ -1,96 +1,374 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title><a href="/">{{.PageTitle}}</a></title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><a href="/">{{.PageTitle}}</a></title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <style>
-        .stars {
-            color: #ffd700;
-            font-size: 1.2em;
-        }
-        .stars .empty {
-            color: #ddd;
-        }
-    </style>
+    :root {
+      /* Catppuccin Mocha Color Palette */
+      --ctp-rosewater: #f5e0dc;
+      --ctp-flamingo: #f2cdcd;
+      --ctp-pink: #f5c2e7;
+      --ctp-mauve: #cba6f7;
+      --ctp-red: #f38ba8;
+      --ctp-maroon: #eba0ac;
+      --ctp-peach: #fab387;
+      --ctp-yellow: #f9e2af;
+      --ctp-green: #a6e3a1;
+      --ctp-teal: #94e2d5;
+      --ctp-sky: #89dceb;
+      --ctp-sapphire: #74c7ec;
+      --ctp-blue: #89b4fa;
+      --ctp-lavender: #b4befe;
+      --ctp-text: #cdd6f4;
+      --ctp-subtext1: #bac2de;
+      --ctp-subtext0: #a6adc8;
+      --ctp-overlay2: #9399b2;
+      --ctp-overlay1: #7f849c;
+      --ctp-overlay0: #6c7086;
+      --ctp-surface2: #585b70;
+      --ctp-surface1: #45475a;
+      --ctp-surface0: #313244;
+      --ctp-base: #1e1e2e;
+      --ctp-mantle: #181825;
+      --ctp-crust: #11111b;
+    }
+
+    /* Custom Catppuccin Theme */
+    body {
+      background: linear-gradient(135deg, var(--ctp-base) 0%, var(--ctp-mantle) 100%);
+      color: var(--ctp-text);
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .navbar {
+      background: rgba(24, 24, 37, 0.95) !important;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--ctp-surface0);
+    }
+
+    .navbar .btn-ghost {
+      color: var(--ctp-text);
+    }
+
+    .navbar .btn-ghost:hover {
+      background: var(--ctp-surface0);
+      color: var(--ctp-lavender);
+    }
+
+    /* Form Styling */
+    .form-container {
+      background: rgba(49, 50, 68, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .input, .select {
+      background: var(--ctp-surface0) !important;
+      border: 1px solid var(--ctp-surface2) !important;
+      color: var(--ctp-text) !important;
+      transition: all 0.3s ease;
+    }
+
+    .input:focus, .select:focus {
+      border-color: var(--ctp-lavender) !important;
+      box-shadow: 0 0 0 2px rgba(180, 190, 254, 0.2) !important;
+    }
+
+    .input::placeholder {
+      color: var(--ctp-overlay1) !important;
+    }
+
+    label {
+      color: var(--ctp-subtext1);
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--ctp-mauve), var(--ctp-lavender)) !important;
+      border: none !important;
+      color: var(--ctp-crust) !important;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--ctp-lavender), var(--ctp-blue)) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(203, 166, 247, 0.3);
+    }
+
+    .btn-neutral {
+      background: var(--ctp-surface1) !important;
+      border: 1px solid var(--ctp-surface2) !important;
+      color: var(--ctp-text) !important;
+    }
+
+    .btn-neutral:hover {
+      background: var(--ctp-surface2) !important;
+      border-color: var(--ctp-overlay0) !important;
+    }
+
+    .btn-outline {
+      border-color: var(--ctp-overlay1) !important;
+      color: var(--ctp-subtext1) !important;
+    }
+
+    .btn-outline:hover {
+      background: var(--ctp-surface1) !important;
+      border-color: var(--ctp-overlay2) !important;
+      color: var(--ctp-text) !important;
+    }
+
+    .btn-error {
+      border-color: var(--ctp-red) !important;
+      color: var(--ctp-red) !important;
+    }
+
+    .btn-error:hover {
+      background: var(--ctp-red) !important;
+      color: var(--ctp-crust) !important;
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(49, 50, 68, 0.8) !important;
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--ctp-surface1);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      border-color: var(--ctp-surface2);
+    }
+
+    .card-title {
+      color: var(--ctp-text) !important;
+    }
+
+    .card:hover img {
+      border-color: var(--ctp-lavender);
+    }
+
+    /* Stars */
+    .stars {
+      color: var(--ctp-yellow);
+      font-size: 1.2em;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .stars .empty {
+      color: var(--ctp-overlay0);
+    }
+
+    /* Avatar */
+    .avatar .bg-neutral {
+      background: linear-gradient(135deg, var(--ctp-mauve), var(--ctp-pink)) !important;
+      color: var(--ctp-crust) !important;
+      font-weight: 600;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    /* Price styling */
+    .price {
+      color: var(--ctp-green) !important;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Note text */
+    .note-text {
+      color: var(--ctp-subtext0);
+      font-style: italic;
+    }
+
+    /* Form grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      align-items: end;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.2s; }
+    .card:nth-child(4) { animation-delay: 0.3s; }
+    .card:nth-child(5) { animation-delay: 0.4s; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--ctp-mantle);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--ctp-surface2);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--ctp-overlay0);
+    }
+  </style>
 </head>
 <header> 
-<div class="navbar bg-base-100 shadow-sm mb-4">
-  <div class="flex-1">
-    <a href="/" class="btn btn-ghost text-xl">{{.PageTitle}}</a>
-  </div>
-  <a href="/user">Add user</a>
-</div>
+    <div class="navbar bg-base-100 shadow-sm mb-4">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost text-xl">{{.PageTitle}}</a>
+        </div>
+        <div class="flex-none">
+            <a href="/user" class="btn btn-ghost">Add user</a>
+        </div>
+    </div>
 </header>
 <body>
-  <div class="flex flex-col m-4">
-    <form method="POST" action="/wishlist">
-      <label for="itemname">Item Name:</label>
-      <input type="text" id="itemname" name="itemname" class="input w-52" required minlength="1" maxlength="100">
-      <label for="price">Price:</label>
-      <input type="number" id="price" name="price" class="input w-20" value="0.00" min="0" max="10000000" step="0.01">
-      <label for="url">Link:</label>
-      <input type="url" id="url" name="url" class="input" placeholder="https://example.com">
-      <label for="note">Note:</label>
-      <input type="note" id="note" name="note" class="input" placeholder="Leave a note...">
-      <label for="priority">Priority</label>
-      <select name="priority" id="priority" class="select w-18">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3" selected>3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-      </select>
-      <label for="user">User:</label>
-      <select name="user" id="users" class="select w-36">
-      {{range .Users}}
-        <option value="{{.ID}}">{{.Name}}</option>
-      {{end}}
-      </select>
-      <input class="btn btn-neutral"type="submit" value="Submit">
-    </form>
-  </div>
-  <ul class="grid grid-cols-1 md:grid-cols-4 gap-1 m-4">
-  {{range .WishlistItems}}
-    <li>
-    <div class="card bg-base-100 w-96 shadow-sm mb-4">
-      <figure>
-        <img
-          src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-          alt="Shoes" />
-      </figure>
-    <div class="card-body">
-      <h2 class="card-title">{{.ItemName}}
-      -
-        <strong class="text-lg">{{.Price}}€</strong>
-      <div class="avatar avatar-placeholder">
-        <div class="bg-neutral text-neutral-content w-8 rounded-full">
-          <span class="text-xs">{{slice .UserName 0 1}}</span>
-        </div>
-        </div>
-        <div class="stars">
-          {{if eq .Priority 1}}★☆☆☆☆{{end}}
-          {{if eq .Priority 2}}★★☆☆☆{{end}}
-          {{if eq .Priority 3}}★★★☆☆{{end}}
-          {{if eq .Priority 4}}★★★★☆{{end}}
-          {{if eq .Priority 5}}★★★★★{{end}}
-        </div>
-      </h2>
+  <div class="container mx-auto px-4">
+    <!-- Form Section -->
+    <div class="form-container">
+      <h2 class="text-2xl font-bold mb-6" style="color: var(--ctp-lavender);">🎁 Add New Item</h2>
+      <form method="POST" action="/wishlist">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="itemname">Item Name</label>
+            <input type="text" id="itemname" name="itemname" class="input" required minlength="1" maxlength="100" placeholder="What do you wish for?">
+          </div>
 
-      <p>{{.Note}}</p>
-      <div class="card-actions justify-center">
-        <a href="{{.Url}}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Buy now</a>
-        <a href="/wishlist/{{.ID}}/edit" class="btn btn-primary">Edit</a>
-        <form method="POST" action="/wishlist/{{.ID}}/delete">
-          <input type="hidden" name="id" value="{{.ID}}">
-          <button type="submit" class="btn btn-soft btn-secondary">DELETE</button>
-        </form>
-      </div>
-      </div>
+          <div class="form-field">
+            <label for="price">Price (€)</label>
+            <input type="number" id="price" name="price" class="input" value="0.00" min="0" max="10000000" step="0.01" placeholder="0.00">
+          </div>
+
+          <div class="form-field">
+            <label for="url">Product Link</label>
+            <input type="url" id="url" name="url" class="input" placeholder="https://example.com">
+          </div>
+
+          <div class="form-field">
+            <label for="note">Note</label>
+            <input type="text" id="note" name="note" class="input" placeholder="Any special notes...">
+          </div>
+
+          <div class="form-field">
+            <label for="priority">Priority ⭐</label>
+            <select name="priority" id="priority" class="select">
+              <option value="1">⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="3" selected>⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="user">User</label>
+            <select name="user" id="users" class="select">
+              {{range .Users}}
+                <option value="{{.ID}}">{{.Name}}</option>
+              {{end}}
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>&nbsp;</label>
+            <input class="btn btn-primary" type="submit" value="✨ Add to Wishlist">
+          </div>
+        </div>
+      </form>
     </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {{range .WishlistItems}}
+        <div class="card bg-base-100 shadow-xl">
+            <figure>
+                <img src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
+                     alt="{{.ItemName}}" 
+                     class="rounded-t-lg object-cover h-48 w-full" />
+            </figure>
+            <div class="card-body p-4">
+          <!-- Title and Price -->
+          <div class="flex flex-col gap-3 mb-3">
+            <h2 class="card-title text-base line-clamp-2 leading-snug">{{.ItemName}}</h2>
+            <div class="flex items-center justify-between">
+              <strong class="text-lg price">{{.Price}}€</strong>
+              <div class="flex items-center gap-3">
+                  <div class="avatar placeholder">
+                  <div class="bg-neutral text-neutral-content w-8 rounded-full">
+                    <span class="text-xs font-semibold">{{slice .UserName 0 1}}</span>
+                  </div>
+                </div>
+                <div class="stars">
+                  {{if eq .Priority 1}}★☆☆☆☆{{end}}
+                  {{if eq .Priority 2}}★★☆☆☆{{end}}
+                  {{if eq .Priority 3}}★★★☆☆{{end}}
+                  {{if eq .Priority 4}}★★★★☆{{end}}
+                  {{if eq .Priority 5}}★★★★★{{end}}
+                </div>
+              </div>
+            </div>
+          </div>
+
+                <!-- Note -->
+          {{if .Note}}
+          <p class="text-sm note-text line-clamp-2 mb-4">💭 {{.Note}}</p>
+          {{end}}
+
+                <!-- Actions -->
+          <div class="card-actions flex-col gap-3">
+            <div class="flex w-full gap-2">
+              <a href="{{.Url}}" target="_blank" rel="noopener noreferrer"
+                 class="btn btn-primary btn-sm flex-1">🛒 Buy</a>
+              <a href="/wishlist/{{.ID}}/edit"
+                 class="btn btn-outline btn-sm flex-1">✏️ Edit</a>
+            </div>
+            <form method="POST" action="/wishlist/{{.ID}}/delete" class="w-full">
+              <input type="hidden" name="id" value="{{.ID}}">
+              <button type="submit" class="btn btn-error btn-outline btn-sm w-full">🗑️ Delete</button>
+            </form>
+          </div>
+
+            </div>
+        </div>
+        {{end}}
     </div>
-    </li>
-  {{end}}
-  </div>
+
+
 </body>
 </html>
