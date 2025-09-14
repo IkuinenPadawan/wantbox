@@ -4,6 +4,7 @@ A simple, lightweight wishlist application targeted for self-host audience. Trac
 ## Features
 * Multi-user wishlist cards
 * Add/edit/delete items with prices and URLs
+* Comments/Notes - Add comments/notes to item
 * SQLite database (no setup required)
 * Docker support
 
@@ -66,7 +67,6 @@ go build -o wantbox .
 **User Authentication** - Login system for secure access
 **Categories/Tags** - Organize items by category
 **Images** - Add images of wishlist items
-**Comments/Notes** - Add comments/notes to item
 **Styling Overhaul** - Uniform sleek design
 **Mobile Friendly** - Responsive design
 **Import/Export** - CSV import/export functionality
