@@ -15,6 +15,8 @@ type WishListItem struct {
 	ItemName string  `json:"itemname"`
 	Url      string  `json:"url"`
 	Price    float64 `json:"price"`
+	Note     string  `json:"note"`
+	Priority int     `json:"priority"`
 	UserId   int     `json:"user_id"`
 	UserName string  `json:"username"`
 }
@@ -39,6 +41,8 @@ type ValidatedWishListItem struct {
 	ItemName string
 	Price    float64
 	Url      string
+	Note     string
+	Priority int
 	UserID   int
 }
 
@@ -51,7 +55,7 @@ type User struct {
 	Name string
 }
 
-func validateAndParseWishlistitem(itemname string, priceStr string, url string, userStr string) (ValidatedWishListItem, error) {
+func validateAndParseWishlistitem(itemname string, priceStr string, url string, userStr string, note string, priorityStr string) (ValidatedWishListItem, error) {
 	var item ValidatedWishListItem
 	if itemname == "" || len(itemname) > 100 {
 		return item, fmt.Errorf("item name needs to be between 1-100 characters")
@@ -68,6 +72,13 @@ func validateAndParseWishlistitem(itemname string, priceStr string, url string, 
 		return item, fmt.Errorf("url needs to be under 500 characters")
 	}
 	item.Url = url
+	item.Note = note
+
+	priority, err := strconv.Atoi(priorityStr)
+	if err != nil {
+		return item, fmt.Errorf("invalid priority")
+	}
+	item.Priority = priority
 
 	userId, err := strconv.Atoi(userStr)
 	if err != nil {
@@ -91,15 +102,17 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 	itemname := c.PostForm("itemname")
 	priceStr := c.PostForm("price")
 	url := c.PostForm("url")
+	note := c.PostForm("note")
+	priority := c.PostForm("priority")
 	userStr := c.PostForm("user")
 
-	validatedItem, err := validateAndParseWishlistitem(itemname, priceStr, url, userStr)
+	validatedItem, err := validateAndParseWishlistitem(itemname, priceStr, url, userStr, note, priority)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = insertWishlistItem(db, validatedItem.ItemName, validatedItem.Price, validatedItem.Url, validatedItem.UserID)
+	err = insertWishlistItem(db, validatedItem.ItemName, validatedItem.Price, validatedItem.Url, validatedItem.UserID, validatedItem.Note, validatedItem.Priority)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save item"})
 		return
@@ -107,13 +120,13 @@ func handleWishlistItemForm(db *sql.DB, c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
-func insertWishlistItem(db *sql.DB, itemname string, price float64, url string, user int) error {
-	insertWishlistItemSQL := `INSERT INTO wishlist (itemname, price, url, user_id) VALUES (?, ?, ?, ?)`
+func insertWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, note string, priority int) error {
+	insertWishlistItemSQL := `INSERT INTO wishlist (itemname, price, url, user_id, note, priority) VALUES (?, ?, ?, ?, ?, ?)`
 	statement, err := db.Prepare(insertWishlistItemSQL)
 	if err != nil {
 		return err
 	}
-	_, err = statement.Exec(itemname, price, url, user)
+	_, err = statement.Exec(itemname, price, url, user, note, priority)
 
 	return err
 }
@@ -154,15 +167,17 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 	itemname := c.PostForm("itemname")
 	priceStr := c.PostForm("price")
 	url := c.PostForm("url")
+	note := c.PostForm("note")
+	priority := c.PostForm("priority")
 	userStr := c.PostForm("user")
 
-	validatedItem, err := validateAndParseWishlistitem(itemname, priceStr, url, userStr)
+	validatedItem, err := validateAndParseWishlistitem(itemname, priceStr, url, userStr, note, priority)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = updateWishlistItem(db, validatedItem.ItemName, validatedItem.Price, validatedItem.Url, validatedItem.UserID, id)
+	err = updateWishlistItem(db, validatedItem.ItemName, validatedItem.Price, validatedItem.Url, validatedItem.UserID, validatedItem.Note, validatedItem.Priority, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update item"})
 		return
@@ -170,13 +185,13 @@ func updateWishlistItemHandler(db *sql.DB, c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, "/")
 }
 
-func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, id int) error {
-	updateSQL := `UPDATE wishlist SET itemname = (?), price = (?), url = (?), user_id = (?) WHERE ID = (?)`
+func updateWishlistItem(db *sql.DB, itemname string, price float64, url string, user int, note string, priority int, id int) error {
+	updateSQL := `UPDATE wishlist SET itemname = (?), price = (?), url = (?), note = (?), priority = (?), user_id = (?) WHERE ID = (?)`
 	statement, err := db.Prepare(updateSQL)
 	if err != nil {
 		return err
 	}
-	_, err = statement.Exec(itemname, price, url, user, id)
+	_, err = statement.Exec(itemname, price, url, note, priority, user, id)
 
 	return err
 }
@@ -233,7 +248,7 @@ func findAllUsers(db *sql.DB) ([]User, error) {
 }
 
 func findAll(db *sql.DB) ([]WishListItem, error) {
-	selectAll := `SELECT wishlist.id, itemname, price, url, users.name FROM wishlist INNER JOIN users ON users.id = wishlist.user_id;`
+	selectAll := `SELECT wishlist.id, itemname, price, url, note, priority, users.name FROM wishlist INNER JOIN users ON users.id = wishlist.user_id;`
 	rows, err := db.Query(selectAll)
 	if err != nil {
 		log.Print(err)
@@ -244,7 +259,7 @@ func findAll(db *sql.DB) ([]WishListItem, error) {
 	var wishlistItems []WishListItem
 	for rows.Next() {
 		w := &WishListItem{}
-		err := rows.Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.UserName)
+		err := rows.Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.Note, &w.Priority, &w.UserName)
 		if err != nil {
 			log.Print(err)
 			return nil, err
@@ -255,7 +270,7 @@ func findAll(db *sql.DB) ([]WishListItem, error) {
 }
 
 func findOne(db *sql.DB, id int) (WishListItem, error) {
-	selectOne := `SELECT id, itemname, price, url, user_id FROM wishlist WHERE ID = ?`
+	selectOne := `SELECT id, itemname, price, url, note, priority, user_id FROM wishlist WHERE ID = ?`
 	statement, err := db.Prepare(selectOne)
 	if err != nil {
 		log.Print(err)
@@ -264,14 +279,14 @@ func findOne(db *sql.DB, id int) (WishListItem, error) {
 
 	var wishlistItem WishListItem
 	w := &WishListItem{}
-	err = statement.QueryRow(id).Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.UserId)
+	err = statement.QueryRow(id).Scan(&w.ID, &w.ItemName, &w.Price, &w.Url, &w.Note, &w.Priority, &w.UserId)
 	wishlistItem = *w
 	return wishlistItem, err
 }
 
 func main() {
 	// DB
-	db, err := sql.Open("sqlite", "wantbox.db")
+	db, err := sql.Open("sqlite", "./data/wantbox.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -281,7 +296,9 @@ func main() {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		itemname TEXT NOT NULL,
 		price REAL NOT NULL,
-		url TEXT NOT NULL,
+		url TEXT,
+	    note TEXT,
+	    priority INTEGER DEFAULT 3,
 		user_id INTEGER NOT NULL,
 		timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
 	    FOREIGN KEY (user_id)
